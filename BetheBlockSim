@@ -2,6 +2,7 @@
 //Author:"Mustafa RABUS";
 //Download the csv file containing the Energy and Cross Section data from the IAEA website.
 //You need to enter some data manually under the Input heading.
+//It is a nuclear interaction simulation that gives the energy deposited by particles in matter and their range within the particle as a result of energetic Charged Particle bombardment.
 //Data will be obtained from a csv file and the simulation results will be printed as a csv file.
 
 #include <iostream>
