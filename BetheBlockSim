@@ -1,0 +1,111 @@
+//BETHE BLOCK:
+//Author:"Mustafa RABUS";
+//Download the csv file containing the Energy and Cross Section data from the IAEA website.
+//You need to enter some data manually under the Input heading.
+
+#include <iostream>
+#include<fstream>
+#include <cmath>
+#include <string>
+#include <sstream>
+#include <vector>
+using namespace std;
+
+//INPUTS:
+float zi=2;//Projectile particle proton count (electrical charge in terms of elemental charge).
+float Z=22;//Ti Target material atomic number.
+float mi=3727.38;//(MeV)Alpha projectile particle mass energy value.
+float A=47.867;//Ti Target Material Relative Atomic Mass.(akb)
+float d=4502;//(kg/m3) Ti Target material density.
+float dE=0.1;//(MeV) Projectile Particle Step Energy.
+string source="TiaxCr.csv";
+
+//CONSTANTS:
+float c=3*pow(10,8);//(m/s)light speed.
+float me=0.511;//(MeV)electron mass energy equivalent.
+float Na=6.022*pow(10,26);//(nucleon/kg)avagadro number.
+float re=2.818*pow(10,(-15));//(meter)classical electron radius.
+float pi=3.14;
+
+//CALCULATIONS:
+float Ih=(9.76+58.8*pow(Z,(-1.19)))*Z*pow(10,(-6));//(MeV) Z>=13 Target material ionization potential.
+float Il=(12*Z+7)*pow(10,(-6));//(MeV) Z<13 Target material ionization potential.
+float Nv=d*Na/A;//(atom/m3) the number of atoms per unit volume of material penetrated by the particle.
+float bethe=0;
+float gamma1=0;
+float gamma2=0;
+float beta2=0;
+float beta1=0;
+float dEdx=0;
+float R=0;
+
+//FUNCTIONS:
+int main (){
+
+    int n=3;
+    int m=0;
+    string scan0;
+    ifstream file0(source);
+    if (!file0.is_open()) {cerr << "Can't open file\n"; return 1;}
+    while (getline(file0, scan0)) {m=m+1;}
+    file0.close();
+
+    int rows=0;
+    string data[n][m];
+    string scan1;
+    ifstream file1(source);
+    if (!file1.is_open()) {cerr << "Can't open file\n"; return 1;}
+    while (getline(file1, scan1)) {
+        stringstream ss(scan1);
+        string item;
+        int rowIndex = 0;
+        while (getline(ss, item, ',')) {
+            if (rowIndex == 0) {data[0][rows]=item;}
+            if (rowIndex == 1) {data[1][rows]=item;}
+            rowIndex++;
+        }
+        rows=rows+1;
+    }
+    file1.close();
+
+    int dataline=0;
+    for (int j=0;j<m;j++) {
+        for (int i=0;i<n;i++){
+            if (data[i][j]=="mb"){dataline=j;break;}
+            }
+        }
+
+    int EC=0;//Energy Coulumn in source csv file from iaea.
+    int RC=2;//Range Column Preference in new csv file.
+    ofstream file2("ECR.csv");
+    if (!file2.is_open()) {cerr << "Can't open file\n";return 1;}
+    file2 << "ENERGY,CROSSSECTION,RANGE\n";
+    for (int j=0;j<m;j++) {
+        for (int i=0;i<n;i++){
+            if (i==RC && j>dataline){
+                float E=stof(data[EC][j]);
+                gamma1=(E+ mi)/mi;
+                gamma2=pow(((E+ mi)/mi),2);
+                beta2=1-(1/gamma2);
+                beta1=sqrt(beta2);
+                bethe=(4*pi*pow(re,2)*pow(zi,2)*me*Nv*Z/beta2);
+                if (Z>=13){
+                    if (mi > 0.511){dEdx=bethe*(log(2*me*beta2*gamma2/Ih)-beta2);}
+                    else if (zi<0) {dEdx=bethe*(log(beta1*gamma1*sqrt(gamma1-1)*me/Ih)+((pow(gamma1-1,2)/8)+1-log(2)*(gamma2+2*gamma1-1))/(2*gamma2));}
+                    else {dEdx=bethe*(log(beta1*gamma1*sqrt(gamma1-1)*me/Ih)-(23+14/(gamma1+1)+10/pow(gamma1+1,2)+4/pow(gamma1+1,3)*(beta2/24)+log(2)/2));}
+                    }
+                else if (Z<13){
+                    if (mi > 0.511){dEdx=bethe*(log(2*me*beta2*gamma2/Il)-beta2);}
+                    else if (zi<0) {dEdx=bethe*(log(beta1*gamma1*sqrt(gamma1-1)*me/Il)+((pow(gamma1-1,2)/8)+1-log(2)*(gamma2+2*gamma1-1))/(2*gamma2));}
+                    else {dEdx=bethe*(log(beta1*gamma1*sqrt(gamma1-1)*me/Il)-(23+14/(gamma1+1)+10/pow(gamma1+1,2)+4/pow(gamma1+1,3)*(beta2/24)+log(2)/2));}
+                    }
+                R=R+(1/dEdx)*dE;
+                data[i][j]=to_string(R);
+                }
+            file2 << data[i][j] << ",";
+            }
+        file2<<endl;
+        }
+    file2.close();
+return 0;
+}
