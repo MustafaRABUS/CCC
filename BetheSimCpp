@@ -66,6 +66,7 @@ int main (){
     int data=0;
     string Energyr[m];
     string Energy[m];
+    string Crossr[m];
     string Cross[m];
     string Range[m];
     string scan1;
@@ -90,7 +91,7 @@ int main (){
     ofstream file2("ECR.csv");
     if (!file2.is_open()) {cerr << "Can't open file\n";return 1;}
     file2 << "ENERGY,CROSSSECTION,RANGE\n";
-    for (int i=0;i<m;i++){Energyr[m-1-i]=Energy[i];}
+    for (int i=0;i<m;i++){Energyr[m-1-i]=Energy[i];Crossr[m-1-i]=Cross[i];}
     for (int i=0;i<m;i++) {
         float E=stof(Energyr[i]);
         gamma1=(E+mi)/mi;
@@ -110,7 +111,7 @@ int main (){
             }
         R=R+(1/dEdx)*dE;
         Range[i]=to_string(R);
-        file2 << Energyr[i] << ","<<Cross[i]<<","<<Range[i]<<endl;
+        file2 << Energyr[i] << ","<<Crossr[i]<<","<<Range[i]<<endl;
         }
     file2.close();
 return 0;
