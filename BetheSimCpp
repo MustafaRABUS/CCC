@@ -4,6 +4,7 @@
 //You need to enter some data manually under the Input heading.
 //It is a nuclear interaction simulation that gives the energy deposited by particles in matter and their range within the particle as a result of energetic Charged Particle bombardment.
 //Data will be obtained from a csv file and the simulation results will be printed as a csv file.
+//The operation video for three nuclear reactions can be watched from this channel: https://www.youtube.com/watch?v=U9oKUto-QWMZ
 
 #include <iostream>
 #include<fstream>
