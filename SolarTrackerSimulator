@@ -1,0 +1,64 @@
+//SolarTrackerSimulator
+//Author:"Mustafa RABUS"
+//The user is asked to input the Linke Turbidity coefficient along with the latitude, longitude and reference time of the location found.
+//It calculates the SUN POSITION tracking and the Panel angle depending on it for every hour throughout the year.
+//It also gives the amount of horizontal radiation reaching the ground, which can be used for the DNI value.
+
+#include <iostream>
+#include<fstream>
+#include <cmath>
+#include <string>
+#include <sstream>
+#include <vector>
+using namespace std;
+
+//CONSTANTS:
+
+int main (){
+int D[365],H[24];
+int Gsc=1367;//SolarConstant(Watt/Squaremeter)
+float delta[365], B[365], E[365], sal[365][24], saz[365][24], Gon[365][24], tso[365][24], w[365][24], COSZ;
+float fi,Lloc,Lref,Tl;
+
+//INPUTS:
+
+cout<<"INPUT: LOCAL ALTITUDE in degree fi-->";
+cin>>fi;
+cout<<"INPUT: LOCAL LONGITUDE in degree  Lloc-->";
+cin>>Lloc;
+cout<<"INPUT: YEREL LOCAL REFERENCE LONGITUDE in degree  Lref-->";
+cin>>Lref;
+cout<<"INPUT: LINKE TURBIDITY FACTOR Tl(1?-->6?)-->";
+cin>>Tl;
+
+//FUNCTIONS:
+
+ofstream file1("solar.csv");
+if (!file1.is_open()) {cerr << "Can't open file\n";return 1;}
+
+file1 << "Day/Hour"<<",";
+for(int d=0;d<24;d++)file1<<d<<",";
+file1 << endl;
+
+for (int i=0;i<365;i++){
+    D[i]=i+1;//DayOfYear
+    delta[i]=23.45*sin((360*(M_PI/180)*(284+D[i]))/365);//DeclinationAngle
+    B[i]=360*(D[i]-1)/365;
+    E[i]=180*(4/M_PI)*(0.000075+0.001868*cos(B[i]*M_PI/180)-0.032077*sin(B[i]*M_PI/180)-0.014616*cos(2*B[i]*M_PI/180)-0.0409*sin(2*B[i]*M_PI/180));//Minute
+    file1<<D[i]<<",";
+    for (int j=0;j<24;j++){
+        H[j]=j;//HourOfDay
+        tso[i][j]=(H[j]*60+E[i]+(sqrt(pow((Lloc-Lref),2))/(Lloc-Lref))*(Lloc-Lref)*4)/60;//LocalSolarTime(Hour)
+        w[i][j]=(tso[i][j]-12)*15;//HourAngle
+        sal[i][j]=asin(sin(fi*M_PI/180)*sin(delta[i]*M_PI/180)+cos(fi*M_PI/180)*cos(delta[i]*M_PI/180)*cos(w[i][j]*M_PI/180))*180/M_PI;//SolarAltitudeAngle
+        saz[i][j]=(w[i][j]/sqrt(pow(w[i][j],2)))*acos((sin(fi*M_PI/180)*sin(sal[i][j]*M_PI/180)-sin(delta[i]*M_PI/180))/(cos(fi*M_PI/180)*cos(sal[i][j]*M_PI/180)))*180/M_PI;//SolarAzimuthAngle
+        COSZ=cos(fi*M_PI/180)*cos(delta[i]*M_PI/180)*cos(w[i][j]*M_PI/180)+sin(fi*M_PI/180)*sin(delta[i]*M_PI/180);//cos(ZenitAngle)
+        if (COSZ>0){Gon[i][j]=Gsc*(1+0.034*(cos(360*(M_PI/180)*D[i]/365)))*COSZ*exp(-Tl/(0.9+9.4*COSZ));//TerrestialSolarConstant(Watt/Squaremeter)}
+        else Gon[i][j]=0;
+        file1<<Gon[i][j]<<",";
+        }
+    file1<<endl;
+    }
+file1.close();
+return 0;
+}
