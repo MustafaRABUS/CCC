@@ -1,8 +1,10 @@
-//SolarTrackerSimulator
-//Author:"Mustafa RABUS"
-//The user is asked to input the Linke Turbidity coefficient along with the latitude, longitude and reference time of the location found.
-//It calculates the SUN POSITION tracking and the Panel angle depending on it for every hour throughout the year.
-//It also gives the amount of horizontal radiation reaching the ground, which can be used for the DNI value.
+// SolarTrackerSimulator
+// Author:"Mustafa RABUS"
+// The user is asked to input the Linke Turbidity coefficient along with the latitude, longitude and reference time of the location found.
+// It calculates the SUN POSITION tracking and the Panel angle depending on it for every hour throughout the year.
+// It also gives the amount of DNI radiation reaching the ground.
+// Outputs for some locations where simulation codes are executed can be seen at the youtube address below.
+// https://www.youtube.com/@MstfRbs/videos
 
 #include <iostream>
 #include<fstream>
@@ -26,7 +28,7 @@ cout<<"INPUT: LOCAL ALTITUDE in degree fi-->";
 cin>>fi;
 cout<<"INPUT: LOCAL LONGITUDE in degree  Lloc-->";
 cin>>Lloc;
-cout<<"INPUT: YEREL LOCAL REFERENCE LONGITUDE in degree  Lref-->";
+cout<<"INPUT: LOCAL REFERENCE LONGITUDE in degree  Lref-->";
 cin>>Lref;
 cout<<"INPUT: LINKE TURBIDITY FACTOR Tl(1?-->6?)-->";
 cin>>Tl;
