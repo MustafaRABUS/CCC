@@ -25,7 +25,6 @@ float T=12.7*3600;//(seconds)HalfLife.<--Tfe52=8.275*3600,Tas72=26*3600,Tzn62=9.
 float dt=10*T;//(Seconds) Irradiation time.
 float dE=0.1; //Step Energy.
 float current =1*pow(10,-6);//(1mikroamper-->amper=coulomb/saniye).
-int DecayStep=1;// The number of radiations emitted in each decay.
 string source="znd64cut.csv";
 
 //CONSTANTS:
@@ -121,7 +120,7 @@ int main (){
         dNx = Nv*dx;
         N = N+stof(Crossrev[i])*pow(10,-31)*dNx;
         Range[i] = to_string(R);
-        Activity[i] =to_string(DecayStep*(log(2)/T)*Flux0*exp(-N)*stof(Crossrev[i])*pow(10,-31)*dNx*(exp(-Flux0*exp(-N)*stof(Crossrev[i])*pow(10,-31)*dt)-exp(-(log(2)/T)*dt))/((log(2)/T)-Flux0*exp(-N)*stof(Crossrev[i])*pow(10,-31)));
+        Activity[i] =to_string((log(2)/T)*Flux0*exp(-N)*stof(Crossrev[i])*pow(10,-31)*dNx*(exp(-Flux0*exp(-N)*stof(Crossrev[i])*pow(10,-31)*dt)-exp(-(log(2)/T)*dt))/((log(2)/T)-Flux0*exp(-N)*stof(Crossrev[i])*pow(10,-31)));
         file2 << Crossrev[i] <<","<< Energyrev[i] <<","<< Range[i] <<","<< Activity[i] << endl;
         }    
     file2.close();
