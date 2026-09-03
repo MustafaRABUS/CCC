@@ -33,14 +33,14 @@ double Range=0;
 
 //PARAMETERS:
 double dE=0.01;//Step Energy (MeV)
-double E;
-int zi;
-int Ai;
-double mi;//(MeV) projectile particle mass energy value.(from nist_raw_data.txt)
+double E; //Projectile Initial Energy: User input-1.
+int zi; //Projectile Charge/Atomic Number: User input-2.
+int Ai; //Projectile Mass Number: User input-3.
+double mi;//(MeV) projectile particle mass energy value.(from nist_atomic_data.txt)
 double A;//(amu) Target Material Relative Atomic Mass. (from PubChemElements.csv)
 double d;//(kg/m3) Target material Density. (from PubChemElements.csv)
 int Z;//Target material atomic number.(from PubChemElements.csv)
-string Target;
+string Target;//Target Periodic Table Symbol: User input-4.
 string IonName;
 string InterAction;
 string Outputs="RangeOut/";
