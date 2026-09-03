@@ -1,102 +1,138 @@
-//BETHE Simulator:
-//Author:"Mustafa RABUS";
-//Download the csv file containing the Energy and Cross Section data from the IAEA website.
-//You need to enter some data manually under the Input heading.
-//It is a nuclear interaction simulation that gives the energy deposited by particles in matter and their range within the particle as a result of energetic Charged Particle bombardment.
-//Data will be obtained from a csv file and the simulation results will be printed as a csv file.
-//The operation video for three nuclear reactions can be watched from this channel: https://www.youtube.com/watch?v=U9oKUto-QWMZ
+// Ions in Matter – Bethe CSDA Range (IMR)
+//
+// Author:"Mustafa RABUS";
+//
+// This program requires the user to manually enter certain input parameters through the terminal.
+// IMR is a nuclear-interaction simulation code that calculates the energy
+// deposited by charged particles as they traverse matter and estimates their
+// range in the target material following energetic charged-particle bombardment.
+//
+// The input data are read from a CSV file, and the simulation results,
+// including the calculated particle ranges, are written to CSV files in the "RangeOut" folder.
+//
+// Videos demonstrating the simulation of three nuclear reactions are
+// available on the following channel:https://www.youtube.com/@MstfRbs/videos
+
 
 #include <iostream>
-#include<fstream>
+#include <fstream>
 #include <cmath>
 #include <string>
 #include <sstream>
 #include <vector>
 using namespace std;
 
-//INPUTS:
-//float zi=2;//Projectile Alpha particle proton count (electrical charge in terms of elemental charge).
-float zi=1;//Projectile Proton or Deuteron particle proton count (electrical charge in terms of elemental charge).
-//float mi=3727.38;//(MeV)Alpha projectile particle mass energy value.
-//float mi=1875.613;//(MeV)Deuteron projectile particle mass energy value.
-float mi=938.272;//(MeV)proton projectile particle mass energy value.
-float Z=22;//Ti Target material atomic number.
-float A=47.867;//Ti Target Material Relative Atomic Mass.(akb)
-float d=4502;//(kg/m3) Ti Target material density.
-float dE=0.1;//(MeV) Projectile Particle Step Energy.
-//string source="TiaxCr.csv";
-//string source="TidxSc.csv";
-string source="TipxSc.csv";
-
 //CONSTANTS:
-float c=3*pow(10,8);//(m/s)light speed.
-float me=0.511;//(MeV)electron mass energy equivalent.
-float Na=6.022*pow(10,26);//(nucleon/kg)avagadro number.
-float re=2.818*pow(10,(-15));//(meter)classical electron radius.
-float pi=3.14;
 
-//CALCULATIONS:
-float Ih=(9.76+58.8*pow(Z,(-1.19)))*Z*pow(10,(-6));//(MeV) Z>=13 Target material ionization potential.
-float Il=(12*Z+7)*pow(10,(-6));//(MeV) Z<13 Target material ionization potential.
-float Nv=d*Na/A;//(atom/m3) the number of atoms per unit volume of material penetrated by the particle.
-float bethe=0;
-float gamma1=0;
-float gamma2=0;
-float beta2=0;
-float beta1=0;
-float dEdx=0;
-float R=0;
+double c=299792458;//(m/s)light speed.
+double me=0.51099895;//(MeV)electron mass energy equivalent.
+double Na=6.022140*pow(10,26);//(nucleon/kg)avagadro number.
+double re=2.817940*pow(10,-15);//(meter)classical electron radius.
+double pi=3.1416;
+double Range=0;
+
+//PARAMETERS:
+double dE=0.01;//Step Energy (MeV)
+double E;
+int zi;
+int Ai;
+double mi;//(MeV) projectile particle mass energy value.(from nist_raw_data.txt)
+double A;//(amu) Target Material Relative Atomic Mass. (from PubChemElements.csv)
+double d;//(kg/m3) Target material Density. (from PubChemElements.csv)
+int Z;//Target material atomic number.(from PubChemElements.csv)
+string Target;
+string IonName;
+string InterAction;
+string Outputs="RangeOut/";
+string Elements="PubChemElements.csv";
+string Ions="nist_atomic_data.txt";
+bool tryCalculate(const string& z_str, const string& a_str, const string& mass_str, int zi, int Ai, double& mi) {
+    if (z_str.empty() || a_str.empty() || mass_str.empty()) return false;
+    if (stoi(z_str) == zi && stoi(a_str) == Ai) {
+        string pure_mass = mass_str.substr(0, mass_str.find('('));
+        mi = 931.49410242 * stod(pure_mass)-(zi*me)+(14.4381 * pow(zi, 2.39) + 1.55468 * pow(10, -6) * pow(zi, 5.35)) / 1000000.0;
+        return true;
+    }
+    return false;
+}
 
 //FUNCTIONS:
 int main (){
+    cout<<"Input Ion Charge/Atomic Number = ";
+    cin >> zi ;
+    cout<<"Input Ion Mass Number = ";
+    cin >> Ai;
+    cout<<"Input Ion Initial Energy (MeV) = ";
+    cin >> E ;
+    cout<<"Input Target Periodic Table Symbol = ";
+    cin >> Target ;
 
-    int m=0;
-    int dataline=0;
-    string scan0;
-    ifstream file0(source);
-    if (!file0.is_open()) {cerr << "Can't open file\n"; return 1;}
-    while (getline(file0, scan0)) {
-        stringstream ss(scan0);
-        string item;
-        while (getline(ss, item, ',')) {if (item == "MeV") {dataline=m;m=-1;break;}}
-        m=m+1;
-        }
-    file0.close();
+    bool found = false;
+    string lines1, key, value, cur_zi, cur_Ai, cur_mass, cur_symbol;
+    stringstream ss;
+    ifstream file1(Ions);
+    if (!file1.is_open()) {cerr << "Can't open file\n";return 1;}
+    while (getline(file1 >> ws, lines1)) {
+        ss.clear();
+        ss.str(lines1);
 
-    int rows=0;
-    int data=0;
-    string Energyr[m];
-    string Energy[m];
-    string Crossr[m];
-    string Cross[m];
-    string Range[m];
-    string scan1;
-    ifstream file1(source);
-    if (!file1.is_open()) {cerr << "Can't open file\n"; return 1;}
-    while (getline(file1, scan1)) {
-        stringstream ss(scan1);
-        string item;
-        if (rows>dataline){
-            int rowIndex = 0;
-            while (getline(ss, item, ',')) {
-                if (rowIndex == 0) {Energy[data]=item;}
-                if (rowIndex == 1) {Cross[data]=item;}
-                rowIndex++;
-                }
-                data=data+1;
+        if (getline(ss, key, '=') && getline(ss >> ws, value)) {
+            value = value.substr(0, value.find_last_not_of(" \t\r\n") + 1);
+            key = key.substr(0, key.find_last_not_of(" \t\r\n") + 1);
+            if (key == "Atomic Number") cur_zi = value;
+            else if (key == "Atomic Symbol") cur_symbol = value;
+            else if (key == "Mass Number") cur_Ai = value;
+            else if (key == "Relative Atomic Mass") {
+                cur_mass = value;
+                if (tryCalculate(cur_zi, cur_Ai, cur_mass, zi, Ai, mi)) {IonName = cur_symbol;found = true;break;}
             }
-        rows=rows+1;
         }
+    }
     file1.close();
 
-    ofstream file2("ECR.csv");
-    if (!file2.is_open()) {cerr << "Can't open file\n";return 1;}
-    file2 << "ENERGY,CROSSSECTION,RANGE\n";
-    for (int i=0;i<m;i++){Energyr[m-1-i]=Energy[i];Crossr[m-1-i]=Cross[i];}
-    for (int i=0;i<m;i++) {
-        float E=stof(Energyr[i]);
-        gamma1=(E+mi)/mi;
-        gamma2=pow(((E+mi)/mi),2);
+    int kamma=0;
+    int search=0;
+    string lines2;
+    ifstream file2(Elements);
+    if (!file2.is_open()) {cerr << "Can't open file\n"; return 1;}
+    while (getline(file2, lines2)) {
+        stringstream ss(lines2);
+        string item;
+        while (getline(ss,item,',')) {
+            if (item==Target){search=1;}
+            if (search==1){kamma=kamma+1;}
+            if (search==1 and kamma==3){Z=stoi(item);}
+            if (search==1 and kamma==4){A=stod(item);}
+            if (search==1 and kamma==14){d=1000*stod(item);search=0;}
+            }
+        }
+    file2.close();
+
+    //CALCULATE PENETRATION:
+
+    double Ei=E;
+    double Nv=d*Na/A;//(atom/m3) the number of atoms per unit volume of material penetrated by the particle.
+    double Ih=(9.76+58.8*pow(Z,(-1.19)))*Z*pow(10,(-6));//(MeV) Z>=13 Target material ionization potential.
+    double Il=(12*Z+7)*pow(10,(-6));//(MeV) Z<13 Target material ionization potential.
+    double bethe=0;
+    double gamma1=0;
+    double gamma2=0;
+    double beta1=0;
+    double beta2=0;
+    double dEdx=0;
+    double dx=0; //Step (m).
+    double R=0; //Range (m).
+
+    vector<double>depth;
+    vector<double>energy;
+    InterAction=IonName+" in "+Target;
+    ofstream file3(Outputs+InterAction+".csv");
+    if (!file3.is_open()) {cerr << "Can't open file\n";return 1;}
+    file3 << InterAction <<endl<<"ProjectileMass(MeV):,"<<mi<<endl<<"TargetAtomicNumber:,"<< Z <<endl<< "TargetAtomicMass(amu):,"<< A <<endl<< "TargetDensity(Kg/m3):," << d <<endl <<"\n";
+    file3 << "ENERGY(MeV),RANGE(m)\n";
+    for (int i=1;Ei>=0;i++) {
+        gamma1=(Ei+ mi)/mi;
+        gamma2=pow(((Ei+ mi)/mi),2);
         beta2=1-(1/gamma2);
         beta1=sqrt(beta2);
         bethe=(4*pi*pow(re,2)*pow(zi,2)*me*Nv*Z/beta2);
@@ -110,10 +146,17 @@ int main (){
             else if (zi<0) {dEdx=bethe*(log(beta1*gamma1*sqrt(gamma1-1)*me/Il)+((pow(gamma1-1,2)/8)+1-log(2)*(gamma2+2*gamma1-1))/(2*gamma2));}
             else {dEdx=bethe*(log(beta1*gamma1*sqrt(gamma1-1)*me/Il)-(23+14/(gamma1+1)+10/pow(gamma1+1,2)+4/pow(gamma1+1,3)*(beta2/24)+log(2)/2));}
             }
-        R=R+(1/dEdx)*dE;
-        Range[i]=to_string(R);
-        file2 << Energyr[i] << ","<<Crossr[i]<<","<<Range[i]<<endl;
+        dx=(1/dEdx)*dE;
+        depth.push_back(R);
+        if (dx>=0) R=R+dx;
+        energy.push_back(Ei);
+        Ei=Ei-dE;
         }
-    file2.close();
-return 0;
+    Range=R;
+    for (int i=0;i<energy.size();i++) file3 << energy[i] << "," << (Range-depth[i]) << "\n";
+    file3.close();
+    depth.clear();
+    energy.clear();
+    cout<<InterAction<<endl<<mi<<endl<<Z<<endl<<A<<endl<<d<<endl<<R<<endl;
+    return 0;
 }
